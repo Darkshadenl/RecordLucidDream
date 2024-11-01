@@ -382,3 +382,5 @@ snapshots-diff/
 .dotnet
 temp
 .packages
+
+HouseScraping/Resources/Raw/appsettings.json
