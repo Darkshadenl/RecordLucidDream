@@ -15,6 +15,9 @@ public class AudioRecordingService : IAudioRecordingService
     public AudioRecordingService(IAudioManager audioManager)
     {
         audioRecorder = audioManager.CreateRecorder();
+
+        System.Console.WriteLine(audioRecorder.CanRecordAudio);
+
         filePath = string.Empty;
     }
 
@@ -52,15 +55,16 @@ public class AudioRecordingService : IAudioRecordingService
         {
             if (audioRecorder.IsRecording)
             {
-               var recordingResult = await audioRecorder.StopAsync();
+                IAudioSource recordingResult = await audioRecorder.StopAsync();
                 
-                string fileName = $"recording_{DateTime.Now:yyyyMMddHHmmss}.wav";
+                string fileName = $"recording_{DateTime.Now:yyyyMMddHHmmss}.m4a";
                 string cacheDir = FileSystem.CacheDirectory;
                 filePath = Path.Combine(cacheDir, fileName);
-    
+
                 using (var audioStream = recordingResult.GetAudioStream())
                 using (var fileStream = File.Create(filePath))
                 {
+                    var player = AudioManager.Current.CreatePlayer(audioStream);
                     await audioStream.CopyToAsync(fileStream);
                 }
                 return true;

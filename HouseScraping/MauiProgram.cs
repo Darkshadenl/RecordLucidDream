@@ -23,6 +23,7 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
+        builder.AddAudio();
 		RegisterServices(builder.Services);
 
         return builder.Build();
@@ -32,7 +33,6 @@ public static class MauiProgram
     {
         // Core services
         services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton(AudioManager.Current);
 
         // OpenAI integratie
         services.AddSingleton(sp =>
