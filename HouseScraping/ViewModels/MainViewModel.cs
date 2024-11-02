@@ -2,6 +2,7 @@ namespace HouseScraping.ViewModels;
 
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using HouseScraping.Services;
 
 public partial class MainViewModel : BaseViewModel
@@ -31,20 +32,33 @@ public partial class MainViewModel : BaseViewModel
         RecordCommand = new Command(async () => await ToggleRecordingAsync());
     }
 
+    [RelayCommand]
     private async Task ToggleRecordingAsync()
     {
         try
         {
             if (!IsRecording)
             {
-                await _audioRecordingService.StartRecordingAsync();
-                IsRecording = true;
-                ButtonText = "Recording...";
+                if (await _audioRecordingService.StartRecordingAsync())
+                {
+                    IsRecording = true;
+                    ButtonText = "Recording...";
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Fout", 
+                        "Kon de opname niet starten. Controleer of de app toegang heeft tot de microfoon.", 
+                        "OK");
+                }
             }
             else
             {
-                await _audioRecordingService.StopRecordingAsync();
-                IsRecording = false;
+                IsRecording = !await _audioRecordingService.StopRecordingAsync();
+
+                if (IsRecording == true) {
+                    IsRecording = false;
+                    await Shell.Current.DisplayAlert("Error", "Er ging iets fout met het stoppen van de opname", "OK");
+                }
                 ButtonText = "Start Recording";
 
                 // Transcribe the audio

@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Deze app heeft toegang tot de microfoon nodig om audio op te nemen.</string>
+	
     <!-- The Mac App Store requires you specify if the app uses encryption. -->
     <!-- Please consult https://developer.apple.com/documentation/bundleresources/information_property_list/itsappusesnonexemptencryption -->
     <!-- <key>ITSAppUsesNonExemptEncryption</key> -->

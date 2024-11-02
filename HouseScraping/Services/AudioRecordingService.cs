@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Plugin.Maui.Audio;
+using HouseScraping.Helpers;
 
 namespace HouseScraping.Services;
 
@@ -17,29 +18,60 @@ public class AudioRecordingService : IAudioRecordingService
         filePath = string.Empty;
     }
 
-   public async Task StartRecordingAsync()
+   public async Task<bool> StartRecordingAsync()
     {
-        if (!audioRecorder.IsRecording)
+        try
         {
-            await audioRecorder.StartAsync();
+            var status = await PermissionHelper.CheckAndRequestMicrophonePermission();
+            
+            if (status != PermissionStatus.Granted)
+            {
+                Console.WriteLine("Microfoon permissie niet verleend");
+                return false;
+            }
+
+            if (!audioRecorder.IsRecording)
+            {
+                await audioRecorder.StartAsync();
+                Console.WriteLine("Opname gestart");
+                return true;
+            }
+            
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fout bij starten opname: {ex.Message}");
+            return false;
         }
     }
 
-    public async Task StopRecordingAsync()
+    public async Task<bool> StopRecordingAsync()
     {
-        if (audioRecorder.IsRecording)
+        try
         {
-           var recordingResult = await audioRecorder.StopAsync();
-            
-            string fileName = $"recording_{DateTime.Now:yyyyMMddHHmmss}.wav";
-            string cacheDir = FileSystem.CacheDirectory;
-            filePath = Path.Combine(cacheDir, fileName);
-
-            using (var audioStream = recordingResult.GetAudioStream())
-            using (var fileStream = File.Create(filePath))
+            if (audioRecorder.IsRecording)
             {
-                await audioStream.CopyToAsync(fileStream);
+               var recordingResult = await audioRecorder.StopAsync();
+                
+                string fileName = $"recording_{DateTime.Now:yyyyMMddHHmmss}.wav";
+                string cacheDir = FileSystem.CacheDirectory;
+                filePath = Path.Combine(cacheDir, fileName);
+    
+                using (var audioStream = recordingResult.GetAudioStream())
+                using (var fileStream = File.Create(filePath))
+                {
+                    await audioStream.CopyToAsync(fileStream);
+                }
+                return true;
+            } else {
+                return false;
             }
+        }
+        catch (System.Exception e)
+        {
+            System.Console.WriteLine(e.Message);
+            throw;
         }
     }
 

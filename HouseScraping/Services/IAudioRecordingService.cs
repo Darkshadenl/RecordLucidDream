@@ -7,7 +7,7 @@ namespace HouseScraping.Services;
 
 public interface IAudioRecordingService
 {
-    Task StartRecordingAsync();
-    Task StopRecordingAsync();
+    Task<bool> StartRecordingAsync();
+    Task<bool> StopRecordingAsync();
     string GetAudioFilePath();
 }

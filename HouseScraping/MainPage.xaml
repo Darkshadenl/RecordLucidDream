@@ -9,6 +9,7 @@
     <ScrollView>
         <VerticalStackLayout
             Padding="30,0"
+            Margin="0,20,0,0"
             Spacing="25">
             
             <Button
