@@ -1,9 +1,9 @@
-namespace HouseScraping.ViewModels;
-
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HouseScraping.Services;
+
+namespace HouseScraping.ViewModels;
 
 public partial class MainViewModel : BaseViewModel
 {
@@ -72,8 +72,7 @@ public partial class MainViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            throw ex;
-            // await Application.Current.MainPage.DisplayAlert("Error", ex.Message, "OK");
+            await Shell.Current.DisplayAlert("Error", ex.Message, "OK");
         }
     }
 }
