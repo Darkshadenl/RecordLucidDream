@@ -20,7 +20,10 @@ public static class MauiProgram
 			});
 
 #if DEBUG
-		builder.Logging.AddDebug();
+        builder.Services.AddLogging(loggingBuilder =>
+        {
+            builder.Logging.AddDebug();
+        });
 #endif
 
         builder.AddAudio();

@@ -22,10 +22,17 @@ public class WhisperService : IWhisperService
             throw new FileNotFoundException("Het audiobestand is niet gevonden.");
         }
 
-        // Voer de transcriptie uit
-        AudioTranscription transcription = await _audioClient.TranscribeAudioAsync(filePath);
+        AudioTranscriptionOptions options = new AudioTranscriptionOptions
+        {
+            Language = "nl",
+            Prompt = @"De transcriptie gaat over een droom die een van de gebruikers van onze app heeft gehad.
+                Het zal worden gebruikt in zijn/haar droomdagboek om lucide dromen te bereiken."
+        };
+
+        AudioTranscription transcription = await _audioClient.TranscribeAudioAsync(filePath, options);
         Console.WriteLine($"Transcriptie voltooid: {transcription.Text}");
 
         return transcription.Text;
     }
 }
+

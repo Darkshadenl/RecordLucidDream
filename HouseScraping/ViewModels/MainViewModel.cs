@@ -1,17 +1,25 @@
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HouseScraping.Model;
 using HouseScraping.Services;
+using Plugin.Maui.Audio;
 
 namespace HouseScraping.ViewModels;
 
-public partial class MainViewModel : BaseViewModel
+public partial class MainViewModel : ObservableObject
 {
     private readonly IAudioRecordingService _audioRecordingService;
     private readonly IWhisperService _whisperService;
     private readonly ILLMService _llmService;
+    private readonly IAudioManager _audioManager;
 
     public ICommand RecordCommand { get; }
+    public ICommand PlayAudioCommand { get; }
+    public ICommand DeleteAudioCommand { get; }
+
+    public ObservableCollection<AudioRecordingInfo> AudioFiles { get; set; }
 
     [ObservableProperty]
     private bool isRecording = false;
@@ -23,13 +31,31 @@ public partial class MainViewModel : BaseViewModel
     public MainViewModel(
         IAudioRecordingService audioService,
         IWhisperService whisperService,
-        ILLMService llmService)
+        ILLMService llmService,
+        IAudioManager audioManager)
     {
         _audioRecordingService = audioService;
         _whisperService = whisperService;
         _llmService = llmService;
+        _audioManager = audioManager;
+
+        AudioFiles = new ObservableCollection<AudioRecordingInfo>();
+        LoadAudioFiles();
+
+        _audioRecordingService.NewRecordingCreated += OnNewRecordingCreated;
 
         RecordCommand = new Command(async () => await ToggleRecordingAsync());
+        PlayAudioCommand = new Command<string>(PlayAudio);
+        DeleteAudioCommand = new Command<AudioRecordingInfo>(DeleteAudio);
+    }
+
+    private void OnNewRecordingCreated(object? sender, AudioRecordingInfo newRecording)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            AudioFiles.Insert(0, newRecording);
+            OnPropertyChanged(nameof(AudioFiles));
+        });
     }
 
     [RelayCommand]
@@ -74,6 +100,37 @@ public partial class MainViewModel : BaseViewModel
         {
             await Shell.Current.DisplayAlert("Error", ex.Message, "OK");
         }
+    }
+
+    private void LoadAudioFiles()
+    {
+        AudioFiles.Clear();
+        string cacheDir = FileSystem.CacheDirectory;
+        var files = Directory.GetFiles(cacheDir, "recording_*.m4a");
+
+        foreach (var file in files)
+        {
+            AudioFiles.Add(new AudioRecordingInfo
+            {
+                FileName = Path.GetFileName(file),
+                FilePath = file
+            });
+        }
+    }
+
+    private async void PlayAudio(string filePath)
+    {
+        var player = _audioManager.CreatePlayer(filePath);
+        player.Play();
+    }
+
+    private void DeleteAudio(AudioRecordingInfo audioRecordingInfo)
+    {
+        if (File.Exists(audioRecordingInfo.FilePath))
+            File.Delete(audioRecordingInfo.FilePath);
+
+        AudioFiles.Remove(audioRecordingInfo);
+        OnPropertyChanged(nameof(AudioFiles));
     }
 }
 

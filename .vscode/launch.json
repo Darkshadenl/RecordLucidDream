@@ -9,6 +9,13 @@
             "type": "maui",
             "request": "launch",
             "preLaunchTask": "maui: Build",
+        },
+        {
+            "name": "Android Debug",
+            "type": "maui",
+            "request": "launch",
+            "preLaunchTask": "maui: Build",
+            "targetFramework": "net8.0-android"
         }
     ]
 }
