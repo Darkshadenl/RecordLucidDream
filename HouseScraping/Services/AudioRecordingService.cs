@@ -6,6 +6,9 @@ using Plugin.Maui.Audio;
 using HouseScraping.Helpers;
 using Microsoft.Extensions.Logging;
 using HouseScraping.Model;
+using TagLib;
+using NAudio.Wave;
+
 
 namespace HouseScraping.Services;
 
@@ -59,11 +62,17 @@ public class AudioRecordingService : IAudioRecordingService
             IAudioSource recordingResult = await audioRecorder.StopAsync();
 
             string fileName = $"recording_{DateTime.Now:yyyyMMddHHmmss}.m4a";
-            _logger.LogInformation($"Opname opgeslagen in {filePath}");
             string cacheDir = FileSystem.CacheDirectory;
             filePath = Path.Combine(cacheDir, fileName);
 
             using var audioStream = recordingResult.GetAudioStream();
+
+            using (var fileStream = System.IO.File.Create(filePath))
+                await audioStream.CopyToAsync(fileStream);
+            
+            var fileInfo = new FileInfo(filePath);
+            var duration =  TryGetM4ADuration(filePath);
+
 
             var audioInfo = new AudioRecordingInfo
             {
@@ -71,12 +80,11 @@ public class AudioRecordingService : IAudioRecordingService
                 FileName = fileName,
                 RecordedAt = DateTime.Now,
                 IsProcessed = false,
-                TranscriptionStatus = "Not Started"
+                TranscriptionStatus = "Not Started",
+                FileSizeBytes = fileInfo.Length,
+                Duration = duration ?? TimeSpan.Zero
             };
 
-            using (var fileStream = File.Create(filePath))
-                await audioStream.CopyToAsync(fileStream);
-            
             NewRecordingCreated?.Invoke(this, audioInfo);
 
             return true;
@@ -89,5 +97,35 @@ public class AudioRecordingService : IAudioRecordingService
 
     public string GetAudioFilePath() => filePath;
 
+    public static TimeSpan GetM4ADuration(string filePath)
+    {
+        
+        try
+        {
+            using var file = TagLib.File.Create(filePath);
+            return file.Properties.Duration;
+        }
+        catch (System.Exception)
+        {
+            
+            throw;
+        }
+    }
+
+    public TimeSpan? TryGetM4ADuration(string filePath)
+    {
+        try
+        {
+            using (var reader = new MediaFoundationReader(filePath))
+            {
+                return reader.TotalTime;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fout bij het lezen van het bestand: {ex.Message}");
+            return null;
+        }
+    }
 }
 

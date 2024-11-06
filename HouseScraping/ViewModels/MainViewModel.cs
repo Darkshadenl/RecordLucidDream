@@ -118,7 +118,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private async void PlayAudio(string filePath)
+    private void PlayAudio(string filePath)
     {
         var player = _audioManager.CreatePlayer(filePath);
         player.Play();
