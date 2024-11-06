@@ -4,12 +4,38 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:HouseScraping"
-    Shell.FlyoutBehavior="Disabled"
-    Title="HouseScraping">
+    Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="Auto,*,Auto" 
+              Padding="10">
+            <!-- <Image Grid.Column="0" 
+                   Source="house_icon.png" 
+                   HeightRequest="30" 
+                   WidthRequest="30"/> -->
+            <Label Grid.Column="1" 
+                   Text="Dreamjournal" 
+                   VerticalOptions="Center" 
+                   HorizontalOptions="Start"
+                   FontSize="20"
+                   FontAttributes="Bold"/>
+            <!-- <Button Grid.Column="2" 
+                    Text="Settings" 
+                    /> -->
+        </Grid>
+    </Shell.TitleView>
+
+    <TabBar>
+        <Tab Title="Home">
+            <ShellContent
+                ContentTemplate="{DataTemplate local:MainPage}"
+                Route="MainPage" />
+        </Tab>
+        <!-- <Tab Title="Settings">
+            <ShellContent
+                ContentTemplate="{DataTemplate local:SettingsPage}"
+                Route="SettingsPage" />
+        </Tab> -->
+    </TabBar>
 
 </Shell>

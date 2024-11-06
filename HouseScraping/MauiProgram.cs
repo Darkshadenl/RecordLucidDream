@@ -46,6 +46,8 @@ public static class MauiProgram
             return new OpenAIClient(apiKey);
         });
 
+        services.AddSingleton<AppShell>();
+
         // Applicatie services
         services.AddSingleton<IAudioRecordingService, AudioRecordingService>();
         services.AddSingleton<IWhisperService, WhisperService>();
