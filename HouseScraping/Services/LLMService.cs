@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using OpenAI;
 using OpenAI.Chat;
 
-public class LLMService : ILLMService
+public class LLMService : Interfaces.ILLMService
 {
     private readonly ChatClient _chatClient;
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using OpenAI;
 using OpenAI.Audio;
 
-public class WhisperService : IWhisperService
+public class WhisperService : Interfaces.IWhisperService
 {
     private readonly AudioClient _audioClient;
 
@@ -22,11 +22,11 @@ public class WhisperService : IWhisperService
             throw new FileNotFoundException("Het audiobestand is niet gevonden.");
         }
 
-        AudioTranscriptionOptions options = new AudioTranscriptionOptions
+        AudioTranscriptionOptions options = new()
         {
             Language = "nl",
             Prompt = @"De transcriptie gaat over een droom die een van de gebruikers van onze app heeft gehad.
-                Het zal worden gebruikt in zijn/haar droomdagboek om lucide dromen te bereiken."
+                Het zal worden gebruikt in zijn/haar droomdagboek om lucide dromen te krijgen."
         };
 
         AudioTranscription transcription = await _audioClient.TranscribeAudioAsync(filePath, options);

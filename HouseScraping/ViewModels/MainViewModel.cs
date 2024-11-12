@@ -3,7 +3,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HouseScraping.Model;
-using HouseScraping.Services;
+using Interfaces;
 using Plugin.Maui.Audio;
 
 namespace HouseScraping.ViewModels;
@@ -18,8 +18,8 @@ public partial class MainViewModel : ObservableObject
     public ICommand RecordCommand { get; }
     public ICommand PlayAudioCommand { get; }
     public ICommand DeleteAudioCommand { get; }
-
-    public ObservableCollection<AudioRecordingInfo> AudioFiles { get; set; }
+    public ICommand TranscribeAudioCommand { get; }
+    public ObservableCollection<IAudioRecordingInfo> AudioFiles { get; set; }
 
     [ObservableProperty]
     private bool isRecording = false;
@@ -32,24 +32,26 @@ public partial class MainViewModel : ObservableObject
         IAudioRecordingService audioService,
         IWhisperService whisperService,
         ILLMService llmService,
-        IAudioManager audioManager)
+        IAudioManager audioManager,
+        IAudioRecordedEventBus audioRecordedEventBus)
     {
         _audioRecordingService = audioService;
         _whisperService = whisperService;
         _llmService = llmService;
         _audioManager = audioManager;
 
-        AudioFiles = new ObservableCollection<AudioRecordingInfo>();
+        AudioFiles = [];
         LoadAudioFiles();
 
-        _audioRecordingService.NewRecordingCreated += OnNewRecordingCreated;
+        audioRecordedEventBus.Subscribe<IAudioRecordingInfo>(OnNewRecordingCreated);
 
         RecordCommand = new Command(async () => await ToggleRecordingAsync());
         PlayAudioCommand = new Command<string>(PlayAudio);
-        DeleteAudioCommand = new Command<AudioRecordingInfo>(DeleteAudio);
+        DeleteAudioCommand = new Command<IAudioRecordingInfo>(DeleteAudio);
+        TranscribeAudioCommand = new Command<IAudioRecordingInfo>(TranscribeAudio);
     }
 
-    private void OnNewRecordingCreated(object? sender, AudioRecordingInfo newRecording)
+    private void OnNewRecordingCreated(IAudioRecordingInfo newRecording)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -110,7 +112,7 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var file in files)
         {
-            AudioFiles.Add(new AudioRecordingInfo
+            AudioFiles.Add(new Models.AudioRecordingInfo
             {
                 FileName = Path.GetFileName(file),
                 FilePath = file
@@ -124,13 +126,20 @@ public partial class MainViewModel : ObservableObject
         player.Play();
     }
 
-    private void DeleteAudio(AudioRecordingInfo audioRecordingInfo)
+    private void DeleteAudio(IAudioRecordingInfo audioRecordingInfo)
     {
         if (File.Exists(audioRecordingInfo.FilePath))
             File.Delete(audioRecordingInfo.FilePath);
 
         AudioFiles.Remove(audioRecordingInfo);
         OnPropertyChanged(nameof(AudioFiles));
+    }
+
+    private async void TranscribeAudio(IAudioRecordingInfo audioRecordingInfo)
+    {
+        System.Console.WriteLine();
+        var resultText = await _whisperService.TranscribeAudioAsync(audioRecordingInfo.FilePath);
+        System.Console.WriteLine(resultText);
     }
 }
 

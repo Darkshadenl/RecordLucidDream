@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 using Plugin.Maui.Audio;
 using HouseScraping.Helpers;
 using Microsoft.Extensions.Logging;
-using HouseScraping.Model;
-using TagLib;
-using NAudio.Wave;
-
+using Interfaces;
+using HouseScraping.Models;
 
 namespace HouseScraping.Services;
 
@@ -16,15 +14,15 @@ public class AudioRecordingService : IAudioRecordingService
 {
     private readonly IAudioRecorder audioRecorder;
     private string filePath;
-    private readonly ILogger<AudioRecordingService> _logger;
-    public event EventHandler<AudioRecordingInfo> NewRecordingCreated;
+    private readonly ILogger<IAudioRecordingService> _logger;
+    private readonly IAudioRecordedEventBus _eventBus;
 
-    public AudioRecordingService(ILogger<AudioRecordingService> logger, IAudioManager audioManager)
+    public AudioRecordingService(ILogger<IAudioRecordingService> logger, IAudioManager audioManager,  IAudioRecordedEventBus eventBus)
     {
         _logger = logger;
         audioRecorder = audioManager.CreateRecorder();
-        Console.WriteLine(audioRecorder.CanRecordAudio);
         filePath = string.Empty;
+        _eventBus = eventBus;
     }
 
     public async Task<bool> StartRecordingAsync()
@@ -67,14 +65,12 @@ public class AudioRecordingService : IAudioRecordingService
 
             using var audioStream = recordingResult.GetAudioStream();
 
-            using (var fileStream = System.IO.File.Create(filePath))
+            using (var fileStream = File.Create(filePath))
                 await audioStream.CopyToAsync(fileStream);
             
             var fileInfo = new FileInfo(filePath);
-            var duration =  TryGetM4ADuration(filePath);
 
-
-            var audioInfo = new AudioRecordingInfo
+            IAudioRecordingInfo audioInfo = new AudioRecordingInfo
             {
                 FilePath = filePath,
                 FileName = fileName,
@@ -82,10 +78,9 @@ public class AudioRecordingService : IAudioRecordingService
                 IsProcessed = false,
                 TranscriptionStatus = "Not Started",
                 FileSizeBytes = fileInfo.Length,
-                Duration = duration ?? TimeSpan.Zero
             };
 
-            NewRecordingCreated?.Invoke(this, audioInfo);
+            _eventBus.Publish(audioInfo);
 
             return true;
         }
@@ -97,35 +92,5 @@ public class AudioRecordingService : IAudioRecordingService
 
     public string GetAudioFilePath() => filePath;
 
-    public static TimeSpan GetM4ADuration(string filePath)
-    {
-        
-        try
-        {
-            using var file = TagLib.File.Create(filePath);
-            return file.Properties.Duration;
-        }
-        catch (System.Exception)
-        {
-            
-            throw;
-        }
-    }
-
-    public TimeSpan? TryGetM4ADuration(string filePath)
-    {
-        try
-        {
-            using (var reader = new MediaFoundationReader(filePath))
-            {
-                return reader.TotalTime;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Fout bij het lezen van het bestand: {ex.Message}");
-            return null;
-        }
-    }
 }
 

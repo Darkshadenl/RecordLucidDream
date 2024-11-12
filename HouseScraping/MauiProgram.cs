@@ -3,42 +3,54 @@ using Plugin.Maui.Audio;
 using HouseScraping.Services;
 using OpenAI;
 using HouseScraping.ViewModels;
+using Interfaces;
 
 namespace HouseScraping;
 
 public static class MauiProgram
 {
-	public static MauiApp CreateMauiApp()
-	{
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
-			.ConfigureFonts(fonts =>
-			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-			});
+    public static MauiApp CreateMauiApp()
+        => MauiApp.CreateBuilder()
+            .UseMauiApp<App>()
+            .ConfigureFonts()
+            .ConfigureLogging()
+            .AddAudio()
+            .RegisterServices()
+            .RegisterViewModels()
+            .RegisterViews()
+            .Build();
 
+    private static MauiAppBuilder ConfigureFonts(this MauiAppBuilder builder)
+    {
+        builder.ConfigureFonts(fonts =>
+        {
+            fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+            fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+        });
+        return builder;
+    }
+
+    private static MauiAppBuilder ConfigureLogging(this MauiAppBuilder builder)
+    {
 #if DEBUG
         builder.Services.AddLogging(loggingBuilder =>
         {
             builder.Logging.AddDebug();
         });
 #endif
+        return builder;
+    }
 
-        builder.AddAudio();
-		RegisterServices(builder.Services);
-
-        return builder.Build();
-	}
-
-	private static void RegisterServices(IServiceCollection services)
+    public static MauiAppBuilder RegisterServices(this MauiAppBuilder builder)
     {
-        // Core services
-        services.AddSingleton<ISettingsService, SettingsService>();
-
-        // OpenAI integratie
-        services.AddSingleton(sp =>
+        builder.Services.AddSingleton<ISettingsService, SettingsService>();
+        builder.Services.AddSingleton<IAudioRecordedEventBus, AudioRecordedEventBus>();
+        builder.Services.AddSingleton<IAudioRecordingService, AudioRecordingService>();
+        builder.Services.AddSingleton<IWhisperService, WhisperService>();
+        builder.Services.AddSingleton<ILLMService, LLMService>();
+        builder.Services.AddSingleton<AppShell>();
+        
+        builder.Services.AddSingleton(sp =>
         {
             var settingsService = sp.GetRequiredService<ISettingsService>();
             var apiKey = settingsService.Settings.ApiKeys.OpenAIKey
@@ -46,17 +58,18 @@ public static class MauiProgram
             return new OpenAIClient(apiKey);
         });
 
-        services.AddSingleton<AppShell>();
+        return builder;
+    }
 
-        // Applicatie services
-        services.AddSingleton<IAudioRecordingService, AudioRecordingService>();
-        services.AddSingleton<IWhisperService, WhisperService>();
-        services.AddSingleton<ILLMService, LLMService>();
+    public static MauiAppBuilder RegisterViewModels(this MauiAppBuilder builder)
+    {
+        builder.Services.AddTransient<MainViewModel>();
+        return builder;
+    }
 
-        // ViewModels
-        services.AddTransient<MainViewModel>();
-
-        // Pages
-        services.AddTransient<MainPage>();
+    public static MauiAppBuilder RegisterViews(this MauiAppBuilder builder)
+    {
+        builder.Services.AddTransient<MainPage>();
+        return builder;
     }
 }

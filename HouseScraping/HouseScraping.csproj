@@ -21,7 +21,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>HouseScraping</ApplicationTitle>
+		<ApplicationTitle>LucidDreamingNotation</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.housescraping</ApplicationId>
@@ -60,14 +60,18 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0-preview1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
-		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OpenAI" Version="2.0.0" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="3.0.1" />
 		<PackageReference Include="TagLibSharp" Version="2.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using System;
 
-namespace HouseScraping.Services;
+namespace Interfaces;
 
 public interface IWhisperService
 {
