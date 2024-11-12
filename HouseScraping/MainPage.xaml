@@ -13,7 +13,7 @@
             
             <Button
                 Text="{Binding ButtonText}"
-                Command="{Binding RecordCommand}"
+                Command="{Binding RecordAudioCommand}"
                 SemanticProperties.Hint="Start recording dream."
                 HorizontalOptions="Fill" />
 
@@ -28,7 +28,7 @@
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>
-                                    <SwipeItem Text="Delete"
+                                    <SwipeItem Text="DeleteCommand"
                                              BackgroundColor="Red"
                                              Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=DeleteAudioCommand}"
                                              CommandParameter="{Binding .}"/>
@@ -37,7 +37,7 @@
 
                             <SwipeView.LeftItems>
                                 <SwipeItems>
-                                    <SwipeItem Text="{Binding TranscriptionStatus}"
+                                    <SwipeItem Text="TranscribeCommand"
                                              BackgroundColor="Green"
                                              Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=TranscribeAudioCommand}"
                                              CommandParameter="{Binding .}"/>

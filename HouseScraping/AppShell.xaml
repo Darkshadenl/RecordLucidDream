@@ -7,14 +7,6 @@
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="True"
     >
-
-    <Shell.Resources>
-        <Style TargetType="TabBar">
-            <Setter Property="Shell.TabBarBackgroundColor" Value="White" />
-            <Setter Property="Shell.TabBarTitleColor" Value="Black" />
-        </Style>
-    </Shell.Resources>
-
     <Shell.TitleView>
         <Grid ColumnDefinitions="Auto,*,Auto" 
               Padding="10">

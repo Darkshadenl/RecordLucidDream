@@ -3,6 +3,8 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HouseScraping.Model;
+using HouseScraping.Services.CompiledServices.AI;
+using HouseScraping.Services.CompiledServices.Audio;
 using Interfaces;
 using Plugin.Maui.Audio;
 
@@ -10,15 +12,12 @@ namespace HouseScraping.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    private readonly IAudioManager _audioManager;
     private readonly IAudioRecordingService _audioRecordingService;
     private readonly IWhisperService _whisperService;
     private readonly ILLMService _llmService;
-    private readonly IAudioManager _audioManager;
+    
 
-    public ICommand RecordCommand { get; }
-    public ICommand PlayAudioCommand { get; }
-    public ICommand DeleteAudioCommand { get; }
-    public ICommand TranscribeAudioCommand { get; }
     public ObservableCollection<IAudioRecordingInfo> AudioFiles { get; set; }
 
     [ObservableProperty]
@@ -29,26 +28,19 @@ public partial class MainViewModel : ObservableObject
 
 
     public MainViewModel(
-        IAudioRecordingService audioService,
-        IWhisperService whisperService,
-        ILLMService llmService,
-        IAudioManager audioManager,
+        IAudioServices audioServices,
+        IAiServices aiServices,
         IAudioRecordedEventBus audioRecordedEventBus)
     {
-        _audioRecordingService = audioService;
-        _whisperService = whisperService;
-        _llmService = llmService;
-        _audioManager = audioManager;
+        _audioManager = audioServices.Manager;
+        _audioRecordingService = audioServices.Recording;    
+        _whisperService = aiServices.WhisperService;
+        _llmService = aiServices.LLMService;
 
         AudioFiles = [];
         LoadAudioFiles();
 
         audioRecordedEventBus.Subscribe<IAudioRecordingInfo>(OnNewRecordingCreated);
-
-        RecordCommand = new Command(async () => await ToggleRecordingAsync());
-        PlayAudioCommand = new Command<string>(PlayAudio);
-        DeleteAudioCommand = new Command<IAudioRecordingInfo>(DeleteAudio);
-        TranscribeAudioCommand = new Command<IAudioRecordingInfo>(TranscribeAudio);
     }
 
     private void OnNewRecordingCreated(IAudioRecordingInfo newRecording)
@@ -61,7 +53,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task ToggleRecordingAsync()
+    private async Task RecordAudio()
     {
         try
         {
@@ -88,13 +80,6 @@ public partial class MainViewModel : ObservableObject
                     await Shell.Current.DisplayAlert("Error", "Er ging iets fout met het stoppen van de opname", "OK");
                 }
                 ButtonText = "Start Recording";
-
-                // Transcribe the audio
-                string audioPath = _audioRecordingService.GetAudioFilePath();
-                string transcription = await _whisperService.TranscribeAudioAsync(audioPath);
-                
-                // Process with LLM if needed
-                // var response = await _llmService.GenerateResponseAsync(transcription);
             }
             OnPropertyChanged(nameof(ButtonText));
         }
@@ -120,12 +105,14 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
     private void PlayAudio(string filePath)
     {
         var player = _audioManager.CreatePlayer(filePath);
         player.Play();
     }
 
+    [RelayCommand]
     private void DeleteAudio(IAudioRecordingInfo audioRecordingInfo)
     {
         if (File.Exists(audioRecordingInfo.FilePath))
@@ -135,9 +122,9 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(AudioFiles));
     }
 
-    private async void TranscribeAudio(IAudioRecordingInfo audioRecordingInfo)
+    [RelayCommand]
+    private async Task TranscribeAudio(IAudioRecordingInfo audioRecordingInfo)
     {
-        System.Console.WriteLine();
         var resultText = await _whisperService.TranscribeAudioAsync(audioRecordingInfo.FilePath);
         System.Console.WriteLine(resultText);
     }

@@ -4,6 +4,7 @@ using HouseScraping.Services;
 using OpenAI;
 using HouseScraping.ViewModels;
 using Interfaces;
+using HouseScraping.Services.CompiledServices.Audio;
 
 namespace HouseScraping;
 
@@ -49,6 +50,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IWhisperService, WhisperService>();
         builder.Services.AddSingleton<ILLMService, LLMService>();
         builder.Services.AddSingleton<AppShell>();
+
+        // compiled services
+        builder.Services.AddSingleton<IAudioServices, AudioServices>();
         
         builder.Services.AddSingleton(sp =>
         {
