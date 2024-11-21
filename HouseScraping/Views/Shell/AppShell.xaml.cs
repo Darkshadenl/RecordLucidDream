@@ -1,4 +1,6 @@
-﻿namespace HouseScraping;
+﻿using HouseScraping.Views.Homescreen;
+
+namespace HouseScraping;
 
 public partial class AppShell : Shell
 {
@@ -6,7 +8,7 @@ public partial class AppShell : Shell
 	{
 		InitializeComponent();
 
-		Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
+		Routing.RegisterRoute(nameof(RecordAudioPage), typeof(RecordAudioPage));
         // Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));
 	}
 
