@@ -1,6 +1,4 @@
-using System;
-
-namespace HouseScraping.Model.Settings;
+namespace HouseScraping.Models.Settings;
 
 public class AppSettings
 {

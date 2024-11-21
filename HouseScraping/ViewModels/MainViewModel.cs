@@ -1,39 +1,41 @@
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HouseScraping.Model;
 using HouseScraping.Services.CompiledServices.AI;
 using HouseScraping.Services.CompiledServices.Audio;
 using Interfaces;
+using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
 
 namespace HouseScraping.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    private readonly ILogger<MainViewModel> _logger;
     private readonly IAudioManager _audioManager;
     private readonly IAudioRecordingService _audioRecordingService;
     private readonly IWhisperService _whisperService;
     private readonly ILLMService _llmService;
-    
+    private IDisposable? _currentPlayer;
 
     public ObservableCollection<IAudioRecordingInfo> AudioFiles { get; set; }
 
     [ObservableProperty]
-    private bool isRecording = false;
+    private bool _isRecording;
 
     [ObservableProperty]
-    private string buttonText = "Start Recording";
+    private string _buttonText = "Start Recording";
 
 
     public MainViewModel(
         IAudioServices audioServices,
         IAiServices aiServices,
-        IAudioRecordedEventBus audioRecordedEventBus)
+        IAudioRecordedEventBus audioRecordedEventBus,
+        ILogger<MainViewModel> logger)
     {
+        _logger = logger;
         _audioManager = audioServices.Manager;
-        _audioRecordingService = audioServices.Recording;    
+        _audioRecordingService = audioServices.Recording;
         _whisperService = aiServices.WhisperService;
         _llmService = aiServices.LLMService;
 
@@ -47,10 +49,19 @@ public partial class MainViewModel : ObservableObject
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            AudioFiles.Insert(0, newRecording);
-            OnPropertyChanged(nameof(AudioFiles));
+            try
+            {
+                AudioFiles.Insert(0, newRecording);
+                OnPropertyChanged(nameof(AudioFiles));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error was empty in {nameof(OnNewRecordingCreated)}");
+            }
         });
     }
+
+    private bool GetIsRecording() => !IsRecording;
 
     [RelayCommand]
     private async Task RecordAudio()
@@ -62,20 +73,21 @@ public partial class MainViewModel : ObservableObject
                 if (await _audioRecordingService.StartRecordingAsync())
                 {
                     IsRecording = true;
-                    ButtonText = "Recording...";
+                    ButtonText = "Recording... Click to stop recording.";
                 }
                 else
                 {
-                    await Shell.Current.DisplayAlert("Fout", 
-                        "Kon de opname niet starten. Controleer of de app toegang heeft tot de microfoon.", 
+                    await Shell.Current.DisplayAlert("Fout",
+                        "Kon de opname niet starten. Controleer of de app toegang heeft tot de microfoon.",
                         "OK");
                 }
             }
             else
             {
-                IsRecording = !await _audioRecordingService.StopRecordingAsync();
+                bool stopped = await _audioRecordingService.StopRecordingAsync();
+                IsRecording = !stopped;
 
-                if (IsRecording == true) {
+                if (IsRecording) {
                     IsRecording = false;
                     await Shell.Current.DisplayAlert("Error", "Er ging iets fout met het stoppen van de opname", "OK");
                 }
@@ -91,25 +103,46 @@ public partial class MainViewModel : ObservableObject
 
     private void LoadAudioFiles()
     {
-        AudioFiles.Clear();
-        string cacheDir = FileSystem.CacheDirectory;
-        var files = Directory.GetFiles(cacheDir, "recording_*.m4a");
-
-        foreach (var file in files)
+        try
         {
-            AudioFiles.Add(new Models.AudioRecordingInfo
+            AudioFiles.Clear();
+            string cacheDir = FileSystem.CacheDirectory;
+
+            if (Directory.Exists(cacheDir))
             {
-                FileName = Path.GetFileName(file),
-                FilePath = file
-            });
+                var files = Directory.GetFiles(cacheDir, "recording_*.m4a");
+
+                foreach (var file in files)
+                {
+                    AudioFiles.Add(new Models.AudioRecordingInfo
+                    {
+                        FileName = Path.GetFileName(file),
+                        FilePath = file
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error in {nameof(LoadAudioFiles)} -> {ex.Message}");
         }
     }
 
     [RelayCommand]
     private void PlayAudio(string filePath)
     {
-        var player = _audioManager.CreatePlayer(filePath);
-        player.Play();
+        try
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return;
+
+            _currentPlayer?.Dispose();
+            _currentPlayer = _audioManager.CreatePlayer(filePath);
+            (_currentPlayer as IAudioPlayer)?.Play();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error playing audio: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -122,11 +155,12 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(AudioFiles));
     }
 
-    [RelayCommand]
+    [RelayCommand (CanExecute = nameof(GetIsRecording))]
     private async Task TranscribeAudio(IAudioRecordingInfo audioRecordingInfo)
     {
         var resultText = await _whisperService.TranscribeAudioAsync(audioRecordingInfo.FilePath);
         System.Console.WriteLine(resultText);
+        _logger.LogInformation(resultText);
     }
 }
 

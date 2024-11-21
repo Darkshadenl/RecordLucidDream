@@ -1,12 +1,13 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Interfaces;
+using HouseScraping.Models;
 
 namespace HouseScraping.Database;
 
 public class LucidDbContext : DbContext
 {
-    public DbSet<IAudioRecordingInfo> AudioRecordings { get; set; }
+    public DbSet<AudioRecordingInfo> AudioRecordings { get; set; }
     public string DbPath { get; }
 
     public LucidDbContext(DbContextOptions<LucidDbContext> options) : base(options)
@@ -18,7 +19,7 @@ public class LucidDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<IAudioRecordingInfo>(entity =>
+        modelBuilder.Entity<AudioRecordingInfo>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();

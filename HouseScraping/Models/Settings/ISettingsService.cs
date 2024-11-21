@@ -1,6 +1,4 @@
-using HouseScraping.Model.Settings;
-
-namespace HouseScraping.Services;
+namespace HouseScraping.Models.Settings;
 
 public interface ISettingsService
 {

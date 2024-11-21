@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="HouseScraping.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:home="clr-namespace:HouseScraping.Views.Homescreen"
     Shell.FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="True"
->
-
+    >
     <Shell.TitleView>
         <Grid ColumnDefinitions="Auto,*,Auto"
               Padding="10">
@@ -22,14 +22,9 @@
     <TabBar>
         <Tab Title="Home">
             <ShellContent
-                    ContentTemplate="{DataTemplate local:MainPage}"
-                    Route="MainPage" />
-        </Tab>
-        <Tab Title="Analysis">
-            <ShellContent
-                    ContentTemplate="{DataTemplate local:MainPage}"
-                    Route="MainPage" />
+                ContentTemplate="{DataTemplate home:RecordAudioPage}"
+                Route="RecordAudioPage" />
         </Tab>
     </TabBar>
 
-</LinearLayout>
+</Shell>

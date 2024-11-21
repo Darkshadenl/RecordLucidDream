@@ -1,5 +1,5 @@
 using System;
-using HouseScraping.Model.Settings;
+using HouseScraping.Models.Settings;
 using Newtonsoft.Json;
 
 

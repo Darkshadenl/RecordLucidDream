@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HouseScraping.MainPage"
+             xmlns:viewmodels="clr-namespace:HouseScraping.ViewModels"
+             xmlns:model="clr-namespace:HouseScraping.Models"
+             x:DataType="viewmodels:MainViewModel">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Margin="0,20,0,0"
+            Spacing="25">
+
+            <Button
+                Text="{Binding ButtonText}"
+                Command="{Binding RecordAudioCommand}"
+                SemanticProperties.Hint="Start recording dream."
+                HorizontalOptions="Fill" />
+
+            <Label
+                Text="Recorded Audio Files:"
+                FontSize="18"
+                FontAttributes="Bold"/>
+
+            <CollectionView ItemsSource="{Binding AudioFiles}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:AudioRecordingInfo">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="DeleteCommand"
+                                             BackgroundColor="Red"
+                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=DeleteAudioCommand}"
+                                             CommandParameter="{Binding .}"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <SwipeView.LeftItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="TranscribeCommand"
+                                             BackgroundColor="Green"
+                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=TranscribeAudioCommand}"
+                                             CommandParameter="{Binding .}"/>
+                                </SwipeItems>
+                            </SwipeView.LeftItems>
+
+                            <Frame Margin="0,5" Padding="10">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackLayout Grid.Column="0">
+                                        <Label Text="{Binding FileName}"
+                                            FontAttributes="Bold"/>
+                                        <Label Text="{Binding RecordedAt, StringFormat='Recorded: {0:g}'}"
+                                            FontSize="Small"/>
+                                        <Label Text="{Binding FileSizeBytes, StringFormat='Size: {0:N0} bytes'}"
+                                            FontSize="Small"/>
+                                        <Label Text="{Binding TranscriptionStatus}"
+                                            FontSize="Small"/>
+                                    </StackLayout>
+                                    <Button Grid.Column="1"
+                                        Text="Play"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=PlayAudioCommand}"
+                                        CommandParameter="{Binding FilePath}"
+                                        VerticalOptions="Center"/>
+                                </Grid>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
